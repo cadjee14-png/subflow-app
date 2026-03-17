@@ -134,10 +134,10 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-sm font-medium hover:text-white transition-colors" style={{ color: "rgba(255,255,255,0.6)" }}>
+            <Link href="/login" className="text-sm font-medium hover:text-white transition-colors" style={{ color: "rgba(255,255,255,0.6)" }}>
               Connexion
             </Link>
-            <Link href="/dashboard" className="btn-primary text-sm px-5 py-2 rounded-xl">
+            <Link href="/register" className="btn-primary text-sm px-5 py-2 rounded-xl">
               Essai gratuit
             </Link>
           </div>

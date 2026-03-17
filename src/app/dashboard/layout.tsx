@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -15,9 +16,11 @@ import {
   HelpCircle,
   Plus,
   Search,
+  LogOut,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { RippleButton } from "@/components/RippleButton";
+import { createClient } from "@/lib/supabase/client";
 
 const navItems: Array<{ href: string; label: string; Icon: LucideIcon }> = [
   { href: "/dashboard",                 label: "Tableau de bord", Icon: LayoutDashboard },
@@ -30,6 +33,32 @@ const navItems: Array<{ href: string; label: string; Icon: LucideIcon }> = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userInitials, setUserInitials] = useState("--");
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        const name: string = user.user_metadata?.full_name ?? user.email ?? "";
+        setUserEmail(user.email ?? null);
+        const parts = name.trim().split(" ");
+        setUserInitials(
+          parts.length >= 2
+            ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+            : name.slice(0, 2).toUpperCase()
+        );
+      }
+    });
+  }, []);
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <div className="flex min-h-screen" style={{ background: "#f1f5f9" }}>
@@ -138,15 +167,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-xs font-black text-white"
               style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
             >
-              MA
+              {userInitials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-white truncate">Marie Aubert</p>
-              <p className="text-[10px] truncate" style={{ color: "rgba(255,255,255,0.35)" }}>marie@acmebtp.fr</p>
+              <p className="text-xs font-bold text-white truncate">{userEmail ?? "—"}</p>
+              <p className="text-[10px] truncate" style={{ color: "rgba(255,255,255,0.35)" }}>Compte actif</p>
             </div>
-            <button className="p-1 rounded-lg transition-colors hover:bg-white/10" style={{ color: "rgba(255,255,255,0.3)" }}>
-              <Settings size={14} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                className="p-1 rounded-lg transition-colors hover:bg-white/10"
+                style={{ color: "rgba(255,255,255,0.3)" }}
+                title="Paramètres"
+              >
+                <Settings size={14} />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="p-1 rounded-lg transition-colors hover:bg-red-500/20"
+                style={{ color: "rgba(255,255,255,0.3)" }}
+                title="Se déconnecter"
+                onMouseEnter={(e) => { e.currentTarget.style.color = "#f87171"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.3)"; }}
+              >
+                <LogOut size={14} />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
