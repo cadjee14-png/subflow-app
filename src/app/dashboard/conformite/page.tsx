@@ -1,6 +1,7 @@
 "use client";
 
-import { ShieldCheck, AlertTriangle, XCircle, FileText, RefreshCw, Plus, Download } from "lucide-react";
+import { useState } from "react";
+import { ShieldCheck, AlertTriangle, XCircle, FileText, RefreshCw, Download, Bell, CheckCircle2 } from "lucide-react";
 import { RippleButton } from "@/components/RippleButton";
 
 /* ─── Accent ─────────────────────────────────────────── */
@@ -147,6 +148,25 @@ function ScoreArc({ score }: { score: number }) {
 }
 
 export default function ConformitePage() {
+  const [alertState, setAlertState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [alertMsg, setAlertMsg]     = useState("");
+
+  async function handleSendAlerts() {
+    setAlertState("loading");
+    setAlertMsg("");
+    try {
+      const res  = await fetch("/api/alerts/send", { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Erreur inconnue.");
+      setAlertMsg(json.message);
+      setAlertState("success");
+    } catch (err: unknown) {
+      setAlertMsg(err instanceof Error ? err.message : "Erreur lors de l'envoi.");
+      setAlertState("error");
+    }
+    setTimeout(() => setAlertState("idle"), 6000);
+  }
+
   const allDocs = soustraitants.flatMap((s) => s.docs);
   const valides  = allDocs.filter((d) => d.statut === "Valide").length;
   const expirant = allDocs.filter((d) => d.statut === "Expirant").length;
@@ -177,8 +197,39 @@ export default function ConformitePage() {
             style={{ background: AG, boxShadow: `0 4px 14px ${AS}` }}>
             <RefreshCw size={15} /> Actualiser
           </RippleButton>
+          <RippleButton
+            rippleVariant="white"
+            onClick={handleSendAlerts}
+            disabled={alertState === "loading"}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", boxShadow: "0 4px 14px rgba(99,102,241,0.35)" }}
+          >
+            {alertState === "loading" ? (
+              <><RefreshCw size={14} className="animate-spin" /> Envoi…</>
+            ) : (
+              <><Bell size={14} /> Tester les alertes</>
+            )}
+          </RippleButton>
         </div>
       </div>
+
+      {/* Alert feedback banner */}
+      {alertState !== "idle" && alertState !== "loading" && (
+        <div
+          className="flex items-center gap-3 px-5 py-3.5 rounded-xl mb-6 text-sm font-semibold animate-fade-up"
+          style={{
+            background: alertState === "success" ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
+            border: `1px solid ${alertState === "success" ? "rgba(16,185,129,0.25)" : "rgba(239,68,68,0.25)"}`,
+            color: alertState === "success" ? "#059669" : "#dc2626",
+          }}
+        >
+          {alertState === "success"
+            ? <CheckCircle2 size={16} className="flex-shrink-0" />
+            : <AlertTriangle size={16} className="flex-shrink-0" />
+          }
+          {alertMsg}
+        </div>
+      )}
 
       {/* Top row: Score global + KPI cards */}
       <div className="grid grid-cols-4 gap-5 mb-6">
@@ -307,7 +358,7 @@ export default function ConformitePage() {
         <RippleButton rippleVariant="white"
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white hover:-translate-y-0.5 transition-all"
           style={{ background: AG, boxShadow: `0 4px 14px ${AS}` }}>
-          <Plus size={14} /> Ajouter un document
+          <FileText size={14} /> Ajouter un document
         </RippleButton>
       </div>
     </div>
