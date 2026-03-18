@@ -167,7 +167,7 @@ function DocumentsModal({ st, onClose }: { st: SousTraitant; onClose: () => void
       await Promise.all(
         data.map(async (doc) => {
           const { data: signed } = await supabase.storage
-            .from("documents")
+            .from("Documents")
             .createSignedUrl(doc.url, 3600);
           if (signed) urls[doc.id] = signed.signedUrl;
         })
@@ -201,7 +201,7 @@ function DocumentsModal({ st, onClose }: { st: SousTraitant; onClose: () => void
     const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
     const path = `${user!.id}/${st.id}/${safeName}`;
 
-    const { error: storErr } = await supabase.storage.from("documents").upload(path, file, { contentType: file.type });
+    const { error: storErr } = await supabase.storage.from("Documents").upload(path, file, { contentType: file.type });
     if (storErr) { setUploadError(storErr.message); setUploading(false); return; }
 
     const { error: dbErr } = await supabase.from("documents").insert({
@@ -224,7 +224,7 @@ function DocumentsModal({ st, onClose }: { st: SousTraitant; onClose: () => void
   /* ── Delete doc ── */
   async function handleDeleteDoc(doc: Document) {
     const supabase = createClient();
-    await supabase.storage.from("documents").remove([doc.url]);
+    await supabase.storage.from("Documents").remove([doc.url]);
     await supabase.from("documents").delete().eq("id", doc.id);
     setDocs((prev) => prev.filter((d) => d.id !== doc.id));
     setDeletingDocId(null);

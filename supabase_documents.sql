@@ -30,18 +30,18 @@ create policy "delete_own" on public.documents for delete using (auth.uid() = us
 -- ─────────────────────────────────────────
 create policy "storage_insert_own" on storage.objects
   for insert with check (
-    bucket_id = 'documents' AND
+    bucket_id = 'Documents' AND
     auth.uid()::text = (storage.foldername(name))[1]
   );
 
 create policy "storage_select_own" on storage.objects
   for select using (
-    bucket_id = 'documents' AND
+    bucket_id = 'Documents' AND
     auth.uid()::text = (storage.foldername(name))[1]
   );
 
 create policy "storage_delete_own" on storage.objects
   for delete using (
-    bucket_id = 'documents' AND
+    bucket_id = 'Documents' AND
     auth.uid()::text = (storage.foldername(name))[1]
   );
